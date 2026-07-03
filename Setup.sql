@@ -1,0 +1,75 @@
+--> Create a Warehouse
+CREATE WAREHOUSE IF NOT EXISTS OLYMPICS_WH
+WAREHOUSE_SIZE = 'XSMALL'
+AUTO_SUSPEND = 60
+AUTO_RESUME = TRUE
+INITIALLY_SUSPENDED = TRUE;
+USE WAREHOUSE OLYMPICS_WH;
+
+--> Create a Database
+CREATE DATABASE IF NOT EXISTS OLYMPICS_ANALYTICS;
+USE DATABASE OLYMPICS_ANALYTICS;
+
+--> Create a Schema
+CREATE SCHEMA IF NOT EXISTS CORE;
+USE SCHEMA CORE;
+
+--> Create a File format
+CREATE OR REPLACE FILE FORMAT csv_ff
+    TYPE = 'CSV'
+    PARSE_HEADER = TRUE
+    FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+    NULL_IF = ('', 'NA', 'NULL')
+    EMPTY_FIELD_AS_NULL = TRUE;
+
+--> Create a stage
+CREATE OR REPLACE STAGE olympics_stage
+    FILE_FORMAT = csv_ff;
+
+SHOW STAGES IN SCHEMA CORE;
+
+--> Verify 
+LIST @olympics_stage;
+
+--> Check for the column names
+CREATE OR REPLACE FILE FORMAT csv_diag
+TYPE = 'CSV'
+SKIP_HEADER = 0;
+
+SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
+FROM @olympics_stage/athlete_events.csv (FILE_FORMAT => 'csv_diag')
+LIMIT 1;
+
+--> Create a table
+CREATE OR REPLACE TABLE core.athlete_events (
+  ID STRING,
+  NAME STRING,
+  SEX STRING,
+  AGE FLOAT,
+  HEIGHT FLOAT,
+  WEIGHT FLOAT,
+  TEAM STRING,
+  NOC STRING,
+  GAMES STRING,
+  YEAR FLOAT,
+  SEASON STRING,
+  CITY STRING,
+  SPORT STRING,
+  EVENT STRING,
+  MEDAL STRING
+);
+
+--> Load the table
+COPY INTO core.athlete_events FROM @olympics_stage/athlete_events.csv
+  FILE_FORMAT = csv_ff MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
+
+--> Verify
+SELECT COUNT(*) FROM core.athlete_events;
+
+SELECT * FROM core.athlete_events LIMIT 10;
+
+SELECT MIN(YEAR), MAX(YEAR) FROM core.athlete_events;
+
+SELECT MEDAL, COUNT(*) FROM core.athlete_events GROUP BY MEDAL;
+
+

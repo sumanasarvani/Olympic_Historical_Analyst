@@ -1,0 +1,114 @@
+name: olympics_semantic_model
+description: >
+  Semantic model for Olympic athlete and medal history, 1896-2016.
+
+tables:
+  - name: athlete_events
+    description: One row per athlete per event they competed in.
+    base_table:
+      database: OLYMPICS_ANALYTICS
+      schema: CORE
+      table: ATHLETE_EVENTS
+    primary_key:
+      columns: [ID, GAMES, EVENT]
+    dimensions:
+      - name: sex
+        expr: SEX
+        data_type: TEXT
+        description: Athlete's sex (M or F).
+        
+     - name: team
+        expr: TEAM
+        data_type: TEXT
+        description: The team/country name the athlete competed for.
+        synonyms: ["country", "nation"]
+
+     - name: noc
+        expr: NOC
+        data_type: TEXT
+        description: 3-letter National Olympic Committee code (e.g. USA, CHN).
+
+      - name: season
+        expr: SEASON
+        data_type: TEXT
+        description: Summer or Winter Games.
+
+      - name: city
+        expr: CITY
+        data_type: TEXT
+        description: Host city of the Games.
+        synonyms: ["host city", "location"]
+
+      - name: sport
+        expr: SPORT
+        data_type: TEXT
+        description: The sport category (e.g. Swimming, Athletics).
+
+      - name: event
+        expr: EVENT
+        data_type: TEXT
+        description: The specific event within a sport (e.g. "Swimming Men's 100 metres Freestyle").
+
+      - name: medal
+        expr: MEDAL
+        data_type: TEXT
+        description: Medal won — Gold, Silver, Bronze, or NULL if no medal was won.
+      - name: games
+        expr: GAMES
+        data_type: TEXT
+        description: The specific Games instance, combining year and season (e.g. "1992 Summer").
+        
+    facts:
+      - name: age
+        expr: AGE
+        data_type: NUMBER
+        description: Athlete's age at the time of competing.
+
+      - name: height
+        expr: HEIGHT
+        data_type: NUMBER
+        description: Athlete's height in centimeters.
+
+      - name: weight
+        expr: WEIGHT
+        data_type: NUMBER
+        description: Athlete's weight in kilograms.
+        
+      - name: year
+        expr: YEAR
+        data_type: NUMBER
+        description: The year the Games took place.
+
+    metrics:
+      - name: athlete_count
+        expr: COUNT(DISTINCT ID)
+        description: Number of distinct athletes.
+
+      - name: event_entry_count
+        expr: COUNT(*)
+        description: Number of athlete-event entries (one athlete can have many).
+
+      - name: medal_count
+        expr: COUNT(medal)
+        description: Total medals won (Gold, Silver, or Bronze combined).
+
+      - name: gold_count
+        expr: COUNT(CASE WHEN medal = 'Gold' THEN 1 END)
+        description: Number of Gold medals won.
+
+      - name: silver_count
+        expr: COUNT(CASE WHEN medal = 'Silver' THEN 1 END)
+        description: Number of Silver medals won.
+
+      - name: bronze_count
+        expr: COUNT(CASE WHEN medal = 'Bronze' THEN 1 END)
+        description: Number of Bronze medals won.
+
+      - name: avg_age
+        expr: AVG(age)
+        description: Average athlete age.
+
+      - name: avg_height
+        expr: AVG(height)
+        description: Average athlete height in cm.
+      

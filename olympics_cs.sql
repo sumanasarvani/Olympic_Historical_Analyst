@@ -1,0 +1,25 @@
+USE DATABASE OLYMPICS_ANALYTICS;
+USE SCHEMA CORE;
+USE WAREHOUSE OLYMPICS_WH;
+
+CREATE OR REPLACE CORTEX SEARCH SERVICE sport_search
+  ON sport
+  WAREHOUSE = OLYMPICS_WH
+  TARGET_LAG = '1 hour'
+  AS (
+    SELECT DISTINCT sport FROM core.athlete_events
+  );
+
+CREATE OR REPLACE CORTEX SEARCH SERVICE team_search
+  ON team
+  WAREHOUSE = OLYMPICS_WH
+  TARGET_LAG = '1 hour'
+  AS (
+    SELECT DISTINCT team FROM core.athlete_events
+  );
+
+SHOW CORTEX SEARCH SERVICES IN SCHEMA core;
+
+--> If you want to suspend the searches after use
+ALTER CORTEX SEARCH SERVICE sport_search SUSPEND;
+ALTER CORTEX SEARCH SERVICE team_search SUSPEND;
